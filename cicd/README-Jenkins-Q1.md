@@ -8,10 +8,10 @@ This project contains a complete sample for:
 
 ## Project structure
 
-- `Jenkinsfile`
-- `sample-app/app.py`
-- `sample-app/requirements.txt`
-- `sample-app/Dockerfile`
+- `question1/Jenkinsfile`
+- `question1/sample-app/app.py`
+- `question1/sample-app/requirements.txt`
+- `question1/sample-app/Dockerfile`
 
 ## Step 0 - Create GitHub repository with proper name
 
@@ -21,18 +21,30 @@ Use your assignment naming format:
 Example:
 - `HU-DevOps-abc123`
 
+## Naming pattern checklist
+
+Use these names consistently in your submission:
+
+1. Jenkins Job Name:
+- `<deloitte-id>-docker-trivy-pipeline-q1`
+
+2. Commit Message Pattern:
+- `feat(q1-jenkins): <what changed>`
+- `fix(q1-jenkins): <issue resolved>`
+
+3. Pull Request Title Pattern:
+- `Q1 Jenkins | <deloitte-id> | Docker build + Trivy + Docker Hub push`
+
 ## Step 1 - Prerequisites (on Jenkins agent machine)
 
 Install:
 - Docker
-- Trivy
 - Git
 
 Quick check commands:
 
 ```bash
 docker --version
-trivy --version
 git --version
 ```
 
@@ -44,7 +56,7 @@ Expected output:
 ```bash
 git init
 git add .
-git commit -m "feat(ci): add jenkins docker-trivy pipeline"
+git commit -m "feat(q1-jenkins): add docker build trivy gate and dockerhub push"
 git branch -M main
 git remote add origin https://github.com/<your-user>/HU-DevOps-<deloitte-id>.git
 git push -u origin main
@@ -66,8 +78,8 @@ Example:
 
 ## Step 4 - Update Jenkinsfile values
 
-Open `Jenkinsfile` and replace:
-- `REPLACE_WITH_DOCKERHUB_USER/REPLACE_WITH_PRIVATE_REPO`
+Open `question1/Jenkinsfile` and replace:
+- `DOCKERHUB_REPO = 'sah642/hu_devops'`
 with your actual private repo.
 
 Example:
@@ -90,14 +102,14 @@ This ID must exactly match the Jenkinsfile.
 ## Step 6 - Create Jenkins Pipeline job
 
 1. New Item
-2. Enter name: `<deloitte-id>-docker-trivy-pipeline`
+2. Enter name: `<deloitte-id>-docker-trivy-pipeline-q1`
 3. Select Pipeline
 4. In Pipeline section:
    - Definition: Pipeline script from SCM
    - SCM: Git
    - Repository URL: your GitHub repo URL
    - Branch: `*/main`
-   - Script Path: `Jenkinsfile`
+   - Script Path: `question1/Jenkinsfile`
 5. Save
 
 ## Step 7 - Validate manual trigger
@@ -108,8 +120,8 @@ This ID must exactly match the Jenkinsfile.
 Expected stage flow:
 1. Checkout
 2. Build Docker Image
-3. Trivy Security Scan
-4. Push To Docker Hub Private Repo
+3. Quality Gate - Trivy
+4. Push To Private Docker Hub
 
 If Trivy finds HIGH/CRITICAL vulnerabilities:
 - Build fails at Trivy stage (this is expected behavior)
@@ -148,7 +160,7 @@ Example:
 ### Trivy gate command
 
 ```bash
-trivy image --severity HIGH,CRITICAL --exit-code 1 --no-progress <image>
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 1 --no-progress <image>
 ```
 
 What it does:
@@ -164,8 +176,8 @@ What it does:
 
 ## Step 10 - Common issues and fixes
 
-1. `trivy: command not found`
-- Fix: install Trivy on Jenkins agent and restart agent service if needed
+1. `docker: command not found`
+- Fix: install Docker CLI on the Jenkins agent and ensure daemon access
 
 2. `Cannot connect to the Docker daemon`
 - Fix: ensure Docker daemon is running and Jenkins user has Docker permission
@@ -179,6 +191,9 @@ What it does:
 5. Pipeline does not run every 5 minutes
 - Fix: verify Jenkins timezone and confirm job is saved after Jenkinsfile update
 
+6. Trivy image pull fails (rate limit or network issue)
+- Fix: verify internet egress from Jenkins agent and pre-pull `aquasec/trivy:latest` if needed
+
 ## Step 11 - Screenshot checklist (for assignment submission)
 
 Capture screenshots of:
@@ -189,4 +204,9 @@ Capture screenshots of:
 5. Trivy failure example (if vulnerability found)
 6. Trivy success after issue fix
 7. Private Docker Hub repo showing pushed image tag
+8. PR page showing required PR naming pattern
+9. Commit history showing required commit naming pattern
+
+Save these under:
+- `question1/screenshots/` (see `question1/screenshots/README.md` for exact filenames)
 
