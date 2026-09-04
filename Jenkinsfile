@@ -20,7 +20,22 @@ pipeline {
 
     stage('Trivy Security Scan') {
       steps {
-        sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 1 --no-progress ${IMAGE_FULL}'
+        sh '''
+          set -e
+          TRIVY_VERSION="0.57.1"
+
+          if ! command -v trivy >/dev/null 2>&1; then
+            curl -fsSL -o trivy.tar.gz "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+            tar -xzf trivy.tar.gz trivy
+            chmod +x trivy
+            mv trivy /usr/local/bin/trivy
+            rm -f trivy.tar.gz
+          fi
+
+          docker save "${IMAGE_FULL}" -o image.tar
+          trivy image --input image.tar --severity HIGH,CRITICAL --exit-code 1 --no-progress
+          rm -f image.tar
+        '''
       }
     }
 
