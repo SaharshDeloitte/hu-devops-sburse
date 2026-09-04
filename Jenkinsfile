@@ -22,10 +22,15 @@ pipeline {
       steps {
         sh '''
           set -e
-          TRIVY_VERSION="0.57.1"
-
           if ! command -v trivy >/dev/null 2>&1; then
-            curl -fsSL -o trivy.tar.gz "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+            TRIVY_TAG=$(curl -fsSL https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep '"tag_name"' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+            TRIVY_VERSION=${TRIVY_TAG#v}
+            if [ -z "$TRIVY_VERSION" ]; then
+              echo "Could not resolve latest Trivy version"
+              exit 1
+            fi
+
+            curl -fsSL -o trivy.tar.gz "https://github.com/aquasecurity/trivy/releases/download/${TRIVY_TAG}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
             tar -xzf trivy.tar.gz trivy
             chmod +x trivy
             mv trivy /usr/local/bin/trivy
