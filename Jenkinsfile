@@ -20,27 +20,7 @@ pipeline {
 
     stage('Trivy Security Scan') {
       steps {
-        sh '''
-          set -e
-          if ! command -v trivy >/dev/null 2>&1; then
-            TRIVY_TAG=$(curl -fsSL https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep '"tag_name"' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
-            TRIVY_VERSION=${TRIVY_TAG#v}
-            if [ -z "$TRIVY_VERSION" ]; then
-              echo "Could not resolve latest Trivy version"
-              exit 1
-            fi
-
-            curl -fsSL -o trivy.tar.gz "https://github.com/aquasecurity/trivy/releases/download/${TRIVY_TAG}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
-            tar -xzf trivy.tar.gz trivy
-            chmod +x trivy
-            mv trivy /usr/local/bin/trivy
-            rm -f trivy.tar.gz
-          fi
-
-          docker save "${IMAGE_FULL}" -o image.tar
-          trivy image --input image.tar --severity HIGH,CRITICAL --exit-code 1 --no-progress
-          rm -f image.tar
-        '''
+        sh 'trivy image --severity HIGH,CRITICAL --exit-code 1 --no-progress ${IMAGE_FULL}'
       }
     }
 
